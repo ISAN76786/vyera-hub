@@ -1,4 +1,4 @@
--- Vyera Hub v1.2 (Steal An Egg) - paste ke Delta lalu Execute
+-- Vyera Hub v1.4 (Steal An Egg) - paste ke Delta lalu Execute
 local U,R,T,PS=game:GetService("UserInputService"),game:GetService("RunService"),game:GetService("TweenService"),game:GetService("PathfindingService")
 local pl=game:GetService("Players").LocalPlayer
 local ok,par=pcall(function()return gethui and gethui()end)
@@ -7,9 +7,9 @@ if not(ok and par)then par=pl:WaitForChild("PlayerGui")end
 local o=par:FindFirstChild("VyeraHubGUI")if o then o:Destroy()end
 print("[Vyera] PlaceId="..tostring(game.PlaceId).." GameId="..tostring(game.GameId))
 local GRN,AMB,RED=Color3.fromRGB(72,199,142),Color3.fromRGB(250,190,60),Color3.fromRGB(224,70,84)
-local S={sp=24,jp=60,anti=true,max=800,rar={},kw={},tok=0,ign=0,n=0,sk=0,fl=0,rs=true,as=0,fb=true}
+local S={sp=24,jp=60,anti=true,max=800,rar={},kw={},tok=0,ign=0,n=0,sk=0,fl=0,rs=true,as=0,fb=true,gl=true,gs=90,gr=130}
 local cn,lt,ic={},{},{}
-local stL,cL,spBox,dot,pb
+local stL,cL,spBox,dot,pb,gsBox,grBox
 local RAR={"Common","Uncommon","Rare","Epic","Legendary","Mythic","Secret","Cosmic","Eternal","Divine"}
 local function hum()local c=pl.Character return c and c:FindFirstChildOfClass("Humanoid")end
 local function root()local c=pl.Character return c and c:FindFirstChild("HumanoidRootPart")end
@@ -19,213 +19,252 @@ local function upd()if cL then cL.Text="Egg "..S.n.."  Skip "..S.sk end end
 local function fl(a,b)return Vector3.new(a.X-b.X,0,a.Z-b.Z).Magnitude end
 local lp
 cn[#cn+1]=R.Heartbeat:Connect(function(dt)
-local h,r=hum(),root()
-if not h or not r then lp=nil return end
-if S.auto then if S.as>0 and h.WalkSpeed~=S.as then h.WalkSpeed=S.as end elseif S.spOn and h.WalkSpeed~=S.sp then h.WalkSpeed=S.sp end
-if S.jpOn then h.UseJumpPower=true if h.JumpPower~=S.jp then h.JumpPower=S.jp end end
-local p=r.Position
-if S.spOn and not S.auto and S.anti and lp and os.clock()>S.ign then
-if Vector3.new(p.X-lp.X,0,p.Z-lp.Z).Magnitude>S.sp*dt*2.5+8 then
-local n=math.max(16,math.floor(S.sp*.8))
-if n<S.sp then S.sp=n if spBox then spBox.Text=tostring(n)end st("Ketarik! Speed turun ke "..n,AMB)end
-end
-end
-lp=p
+	local h,r=hum(),root()
+	if not h or not r then lp=nil return end
+	if S.auto then
+		if S.as>0 and h.WalkSpeed~=S.as then h.WalkSpeed=S.as end
+	elseif S.spOn and h.WalkSpeed~=S.sp then
+		h.WalkSpeed=S.sp
+	end
+	if S.jpOn then
+		h.UseJumpPower=true
+		if h.JumpPower~=S.jp then h.JumpPower=S.jp end
+	end
+	local p=r.Position
+	if S.spOn and not S.auto and S.anti and lp and os.clock()>S.ign then
+		if Vector3.new(p.X-lp.X,0,p.Z-lp.Z).Magnitude>S.sp*dt*2.5+8 then
+			local n=math.max(16,math.floor(S.sp*.8))
+			if n<S.sp then S.sp=n if spBox then spBox.Text=tostring(n)end st("Ketarik! Speed turun ke "..n,AMB)end
+		end
+	end
+	lp=p
 end)
-cn[#cn+1]=U.JumpRequest:Connect(function()if S.inf then local h=hum()if h then h:ChangeState(Enum.HumanoidStateType.Jumping)end end end)
-cn[#cn+1]=R.Stepped:Connect(function()if S.nc and pl.Character then for _,p in ipairs(pl.Character:GetDescendants())do if p:IsA("BasePart")then p.CanCollide=false end end end end)
+cn[#cn+1]=U.JumpRequest:Connect(function()
+	if S.inf then
+		local h=hum()
+		if h then h:ChangeState(Enum.HumanoidStateType.Jumping)end
+	end
+end)
+cn[#cn+1]=R.Stepped:Connect(function()
+	if S.nc and pl.Character then
+		for _,p in ipairs(pl.Character:GetDescendants())do
+			if p:IsA("BasePart")then p.CanCollide=false end
+		end
+	end
+end)
 local function walk(tgt,my)
-local h,r=hum(),root()
-if not h or not r then return false end
-local path=PS:CreatePath({AgentRadius=2.5,AgentHeight=5,AgentCanJump=true,WaypointSpacing=8})
-local ok2=pcall(function()path:ComputeAsync(r.Position,tgt)end)
-local wps
-if ok2 and path.Status==Enum.PathStatus.Success then wps=path:GetWaypoints()else wps={{Position=tgt,Action=Enum.PathWaypointAction.Walk}}end
-for _,wp in ipairs(wps)do
-h,r=hum(),root()
-if not h or not r or h.Health<=0 or S.tok~=my then return false end
-if wp.Action==Enum.PathWaypointAction.Jump then h.Jump=true end
-h:MoveTo(wp.Position)
-local t1,lc,l2=os.clock(),r.Position,os.clock()
-while fl(wp.Position,r.Position)>math.max(3.5,h.WalkSpeed*.1)and os.clock()-t1<3 do
-task.wait(.1)
-h,r=hum(),root()
-if not h or not r or h.Health<=0 or S.tok~=my then return false end
-if os.clock()-l2>.8 then
-if(r.Position-lc).Magnitude<1 then h.Jump=true end
-lc,l2=r.Position,os.clock()
+	local h,r=hum(),root()
+	if not h or not r then return false end
+	local path=PS:CreatePath({AgentRadius=2.5,AgentHeight=5,AgentCanJump=true,WaypointSpacing=8})
+	local ok2=pcall(function()path:ComputeAsync(r.Position,tgt)end)
+	local wps
+	if ok2 and path.Status==Enum.PathStatus.Success then
+		wps=path:GetWaypoints()
+	else
+		wps={{Position=tgt,Action=Enum.PathWaypointAction.Walk}}
+	end
+	for _,wp in ipairs(wps)do
+		h,r=hum(),root()
+		if not h or not r or h.Health<=0 or S.tok~=my then return false end
+		if wp.Action==Enum.PathWaypointAction.Jump then h.Jump=true end
+		h:MoveTo(wp.Position)
+		local t1,lc,l2=os.clock(),r.Position,os.clock()
+		while fl(wp.Position,r.Position)>math.max(3.5,h.WalkSpeed*.1)and os.clock()-t1<3 do
+			task.wait(.1)
+			h,r=hum(),root()
+			if not h or not r or h.Health<=0 or S.tok~=my then return false end
+			if os.clock()-l2>.8 then
+				if(r.Position-lc).Magnitude<1 then h.Jump=true end
+				lc,l2=r.Position,os.clock()
+			end
+		end
+	end
+	return true
 end
+local function glide(pos,lab,my,spd)
+	local r=root()
+	if not r then return false end
+	local tgt=pos+Vector3.new(0,3,0)
+	local d0=math.max((tgt-r.Position).Magnitude,1)
+	local lc=0
+	while true do
+		local h=hum()
+		r=root()
+		if not h or not r or h.Health<=0 or S.tok~=my then return false end
+		local off=tgt-r.Position
+		local d=off.Magnitude
+		prog(1-d/d0)
+		if d<2.5 then r.AssemblyLinearVelocity=Vector3.zero prog(1)return true end
+		local dt=R.Heartbeat:Wait()
+		local np=r.Position+off.Unit*math.min(spd*dt,d)
+		local fw=Vector3.new(off.X,0,off.Z)
+		if fw.Magnitude>.1 then r.CFrame=CFrame.new(np,np+fw)else r.CFrame=CFrame.new(np)end
+		r.AssemblyLinearVelocity=Vector3.zero
+		local c=pl.Character
+		if c then for _,q in ipairs(c:GetDescendants())do if q:IsA("BasePart")then q.CanCollide=false end end end
+		if lab and os.clock()-lc>.25 then lc=os.clock()st(lab.." ("..math.floor(d).." stud)",AMB)end
+	end
 end
-end
-return true
-end
-local function go(pos,lab)
-local h,r=hum(),root()
-if not h or not r or h.Health<=0 then return false end
-S.tok=S.tok+1
-local my=S.tok
-if S.tp then S.ign=os.clock()+1.5 r.CFrame=CFrame.new(pos+Vector3.new(0,3,0))task.wait(.3)return true end
-local d0=math.max(fl(pos,r.Position),1)
-local t0=os.clock()
-local tries=0
-while true do
-h,r=hum(),root()
-if not h or not r or h.Health<=0 or S.tok~=my then return false end
-local d=fl(pos,r.Position)
-prog(1-d/d0)
-if d<math.max(5,h.WalkSpeed*.12)then prog(1)return true end
-if os.clock()-t0>d0/math.max(h.WalkSpeed,8)*2+45 then return false end
-if lab then st(lab.." ("..math.floor(d).." stud)",AMB)end
-local dir=Vector3.new(pos.X-r.Position.X,0,pos.Z-r.Position.Z).Unit
-local tgt=pos
-if d>150 then tgt=Vector3.new(r.Position.X+dir.X*150,r.Position.Y,r.Position.Z+dir.Z*150)end
-local before=r.Position
-walk(tgt,my)
-h,r=hum(),root()
-if not h or not r or h.Health<=0 or S.tok~=my then return false end
-if(r.Position-before).Magnitude<3 then
-tries=tries+1
-if tries>=3 then return false end
-local sd=dir:Cross(Vector3.new(0,1,0))*(tries%2==0 and 14 or -14)
-h:MoveTo(r.Position+sd)
-h.Jump=true
-task.wait(.8)
-else tries=0 end
-end
+local function go(pos,lab,spd)
+	local h,r=hum(),root()
+	if not h or not r or h.Health<=0 then return false end
+	S.tok=S.tok+1
+	local my=S.tok
+	if S.tp then S.ign=os.clock()+1.5 r.CFrame=CFrame.new(pos+Vector3.new(0,3,0))task.wait(.3)return true end
+	if S.gl then return glide(pos,lab,my,spd or S.gs)end
+	local d0=math.max(fl(pos,r.Position),1)
+	local t0=os.clock()
+	local tries=0
+	while true do
+		h,r=hum(),root()
+		if not h or not r or h.Health<=0 or S.tok~=my then return false end
+		local d=fl(pos,r.Position)
+		prog(1-d/d0)
+		if d<math.max(5,h.WalkSpeed*.12)then prog(1)return true end
+		if os.clock()-t0>d0/math.max(h.WalkSpeed,8)*2+45 then return false end
+		if lab then st(lab.." ("..math.floor(d).." stud)",AMB)end
+		local dir=Vector3.new(pos.X-r.Position.X,0,pos.Z-r.Position.Z).Unit
+		local tgt=pos
+		if d>150 then tgt=Vector3.new(r.Position.X+dir.X*150,r.Position.Y,r.Position.Z+dir.Z*150)end
+		local before=r.Position
+		walk(tgt,my)
+		h,r=hum(),root()
+		if not h or not r or h.Health<=0 or S.tok~=my then return false end
+		if(r.Position-before).Magnitude<3 then
+			tries=tries+1
+			if tries>=3 then return false end
+			local sd=dir:Cross(Vector3.new(0,1,0))*(tries%2==0 and 14 or -14)
+			h:MoveTo(r.Position+sd)
+			h.Jump=true
+			task.wait(.8)
+		else tries=0 end
+	end
 end
 local function stop()S.tok=S.tok+1 local h,r=hum(),root()if h and r then h:MoveTo(r.Position)end prog(0)end
 local function pp(p)
-local a=p.Parent
-if not a then return nil end
-if a:IsA("Attachment")then return a.WorldPosition end
-if a:IsA("BasePart")then return a.Position end
-if a:IsA("Model")then return a:GetPivot().Position end
-return nil
+	local a=p.Parent
+	if not a then return nil end
+	if a:IsA("Attachment")then return a.WorldPosition end
+	if a:IsA("BasePart")then return a.Position end
+	if a:IsA("Model")then return a:GetPivot().Position end
+	return nil
 end
 local function col(i,t,s)
-if s[i]then return end
-s[i]=true
-t[#t+1]=i.Name
-for k,v in pairs(i:GetAttributes())do t[#t+1]=tostring(k).." "..tostring(v)end
-if i:IsA("TextLabel")or i:IsA("TextButton")or i:IsA("TextBox")then t[#t+1]=i.Text elseif i:IsA("StringValue")then t[#t+1]=i.Value end
+	if s[i]then return end
+	s[i]=true
+	t[#t+1]=i.Name
+	for k,v in pairs(i:GetAttributes())do t[#t+1]=tostring(k).." "..tostring(v)end
+	if i:IsA("TextLabel")or i:IsA("TextButton")or i:IsA("TextBox")then t[#t+1]=i.Text elseif i:IsA("StringValue")then t[#t+1]=i.Value end
 end
 local function info(p)
-local c=ic[p]
-if c and os.clock()-c.t<8 then return c.x end
-local t,s={},{}
-col(p,t,s)
-local h=p.Parent
-if h then
-col(h,t,s)
-local n=0
-for _,d in ipairs(h:GetDescendants())do n=n+1 if n>150 then break end col(d,t,s)end
-local pos=pp(p)
-if pos then
-local ok2,hits=pcall(function()return workspace:GetPartBoundsInRadius(pos,10,OverlapParams.new())end)
-if ok2 and hits then
-local ms,cnt={},0
-for _,b in ipairs(hits)do
-for _,g in ipairs(b:GetChildren())do if g:IsA("BillboardGui")or g:IsA("SurfaceGui")then col(g,t,s)for _,d in ipairs(g:GetDescendants())do col(d,t,s)end end end
-local m=b:FindFirstAncestorOfClass("Model")
-if m and m~=workspace and not ms[m]and not m:FindFirstChildOfClass("Humanoid")and #m:GetChildren()<=40 then
-ms[m]=true
-cnt=cnt+1
-if cnt>6 then break end
-col(m,t,s)
-local k=0
-for _,d in ipairs(m:GetDescendants())do k=k+1 if k>120 then break end col(d,t,s)end
-end
-end
-end
-end
-end
-local x=string.lower(table.concat(t," "))
-ic[p]={t=os.clock(),x=x}
-return x
+	local c=ic[p]
+	if c and os.clock()-c.t<8 then return c.x end
+	local t,s={},{}
+	col(p,t,s)
+	local h=p.Parent
+	if h then
+		col(h,t,s)
+		local n=0
+		for _,d in ipairs(h:GetDescendants())do n=n+1 if n>150 then break end col(d,t,s)end
+		local pos=pp(p)
+		if pos then
+			local ok2,hits=pcall(function()return workspace:GetPartBoundsInRadius(pos,10,OverlapParams.new())end)
+			if ok2 and hits then
+				local ms,cnt={},0
+				for _,b in ipairs(hits)do
+					for _,g in ipairs(b:GetChildren())do
+						if g:IsA("BillboardGui")or g:IsA("SurfaceGui")then
+							col(g,t,s)
+							for _,d in ipairs(g:GetDescendants())do col(d,t,s)end
+						end
+					end
+					local m=b:FindFirstAncestorOfClass("Model")
+					if m and m~=workspace and not ms[m]and not m:FindFirstChildOfClass("Humanoid")and #m:GetChildren()<=40 then
+						ms[m]=true
+						cnt=cnt+1
+						if cnt>6 then break end
+						col(m,t,s)
+						local k=0
+						for _,d in ipairs(m:GetDescendants())do k=k+1 if k>120 then break end col(d,t,s)end
+					end
+				end
+			end
+		end
+	end
+	local x=string.lower(table.concat(t," "))
+	ic[p]={t=os.clock(),x=x}
+	return x
 end
 local function hw(x,w)w=string.lower(w):gsub("%p","%%%0")return string.find(x,"%f[%w]"..w.."%f[%W]")~=nil end
 local function fa()for _,v in pairs(S.rar)do if v then return true end end return #S.kw>0 end
 local function fm(p)
-if not fa()then return true end
-local x=info(p)
-for k,v in pairs(S.rar)do if v and hw(x,k)then return true end end
-for _,k in ipairs(S.kw)do if hw(x,k)then return true end end
-return false
+	if not fa()then return true end
+	local x=info(p)
+	for k,v in pairs(S.rar)do if v and hw(x,k)then return true end end
+	for _,k in ipairs(S.kw)do if hw(x,k)then return true end end
+	return false
 end
 local function rar(p)local x=info(p)for _,n in ipairs(RAR)do if hw(x,n)then return n end end return nil end
 local function near(nf,nc)
-local r=root()
-if not r then return nil end
-local b,bd,a,ad
-for _,part in ipairs(workspace:GetChildren())do
-if part.Name=="SmartPromptPart"then
-local p=part:FindFirstChild("CarryAreaEgg")
-if p and p:IsA("ProximityPrompt")and p.Enabled and p.ActionText=="Steal"then
-local pos=pp(p)
-if pos and(nc or not lt[p]or os.clock()-lt[p]>6)then
-local d=(pos-r.Position).Magnitude
-if d<=S.max then
-if not ad or d<ad then a,ad=p,d end
-if(not bd or d<bd)and(nf or fm(p))then b,bd=p,d end
-end
-end
-end
-end
-end
-if b then return b end
-if S.fb then return a end
-return nil
+	local r=root()
+	if not r then return nil end
+	local b,bd,a,ad
+	for _,part in ipairs(workspace:GetChildren())do
+		if part.Name=="SmartPromptPart"then
+			local p=part:FindFirstChild("CarryAreaEgg")
+			if p and p:IsA("ProximityPrompt")and p.Enabled and p.ActionText=="Steal"then
+				local pos=pp(p)
+				if pos and(nc or not lt[p]or os.clock()-lt[p]>6)then
+					local d=(pos-r.Position).Magnitude
+					if d<=S.max then
+						if not ad or d<ad then a,ad=p,d end
+						if(not bd or d<bd)and(nf or fm(p))then b,bd=p,d end
+					end
+				end
+			end
+		end
+	end
+	if b then return b end
+	if S.fb then return a end
+	return nil
 end
 local function cyc()
-local h,r=hum(),root()
-if not h or not r or h.Health<=0 then st("Menunggu respawn...",AMB)prog(0)return end
-local p=near(false,false)
-if not p then st("Tidak ada egg sesuai filter",AMB)prog(0)return end
-lt[p]=os.clock()
-local pos=pp(p)
-if not pos then return end
-local rn=rar(p)
-if fa()and not fm(p)then st("Rarity pilihan tidak ada, ambil egg lain",AMB)task.wait(.5)end
-if not go(pos,"Egg "..(rn or"?"))then
-if not S.auto then return end
-lt[p]=os.clock()+24
-S.sk=S.sk+1
-S.fl=S.fl+1
-upd()
-st("Nyangkut, skip egg ini",RED)
-if S.rs and S.fl>=2 then
-S.fl=0
-st("Reset karakter (nyangkut)",RED)
-local h2=hum()
-if h2 then h2.Health=0 end
-task.wait(5)
-end
-return
-end
-if not S.auto then return end
-if not fireproximityprompt then S.auto=false st("Executor tidak support prompt",RED)return end
-st("Mengambil egg...",GRN)
-fireproximityprompt(p)task.wait(.8)
-local function tk()return not p.Parent or not p.Enabled or p.ActionText~="Steal"end
-local got=tk()
-if not got then fireproximityprompt(p)task.wait(.8)got=tk()end
-if got then S.n=S.n+1 upd()end
-if S.base then
-st("Kabur ke langit...",AMB)
-local r=root()
-if r then
-local amanY = r.Position.Y + 150
-r.CFrame = CFrame.new(r.Position.X, amanY, r.Position.Z)
-task.wait(0.2)
-local targetLangit = Vector3.new(S.base.Position.X, amanY, S.base.Position.Z)
-local dist = (targetLangit - r.Position).Magnitude
-local tw = T:Create(r, TweenInfo.new(dist / 45, Enum.EasingStyle.Linear), {CFrame = CFrame.new(targetLangit)})
-tw:Play()
-tw.Completed:Wait()
-r.CFrame = CFrame.new(S.base.Position + Vector3.new(0, 3, 0))
-S.fl=0 st("Sampai di base",GRN)
-else S.fl=S.fl+1 st("Gagal kembali ke base",RED)end
-else st("Base belum di-set!",RED)end
+	local h,r=hum(),root()
+	if not h or not r or h.Health<=0 then st("Menunggu respawn...",AMB)prog(0)return end
+	local p=near(false,false)
+	if not p then st("Tidak ada egg sesuai filter",AMB)prog(0)return end
+	lt[p]=os.clock()
+	local pos=pp(p)
+	if not pos then return end
+	local rn=rar(p)
+	if fa()and not fm(p)then st("Rarity pilihan tidak ada, ambil egg lain",AMB)task.wait(.5)end
+	if not go(pos,"Egg "..(rn or"?"))then
+		if not S.auto then return end
+		lt[p]=os.clock()+24
+		S.sk=S.sk+1
+		S.fl=S.fl+1
+		upd()
+		st("Nyangkut, skip egg ini",RED)
+		if S.rs and S.fl>=2 then
+			S.fl=0
+			st("Reset karakter (nyangkut)",RED)
+			local h2=hum()
+			if h2 then h2.Health=0 end
+			task.wait(5)
+		end
+		return
+	end
+	if not S.auto then return end
+	if not fireproximityprompt then S.auto=false st("Executor tidak support prompt",RED)return end
+	st("Mengambil egg...",GRN)
+	fireproximityprompt(p)task.wait(.35)
+	local function tk()return not p.Parent or not p.Enabled or p.ActionText~="Steal"end
+	local got=tk()
+	if not got then fireproximityprompt(p)task.wait(.4)got=tk()end
+	if got then S.n=S.n+1 upd()end
+	if S.base then
+		if go(S.base.Position,"Kembali ke base",S.gr)then S.fl=0 st("Sampai di base",GRN)else S.fl=S.fl+1 st("Gagal kembali ke base",RED)end
+	else st("Base belum di-set!",RED)end
 end
 local function N(c,p,a)local i=Instance.new(c)for k,v in pairs(p)do i[k]=v end i.Parent=a return i end
 local function rd(o,r)N("UICorner",{CornerRadius=UDim.new(0,r)},o)end
@@ -234,14 +273,20 @@ local function c3(r,g,b)return Color3.fromRGB(r,g,b)end
 local K={bg=c3(15,16,23),pn=c3(26,28,40),p2=c3(38,41,58),ac=c3(139,92,246),a2=c3(236,72,153),gd=GRN,of=c3(64,68,88),tx=c3(236,238,247),dm=c3(150,156,180),dg=RED}
 local function L(a,t,sz,c,f)return N("TextLabel",{BackgroundTransparency=1,Text=t,TextSize=sz or 13,TextColor3=c or K.tx,Font=f or Enum.Font.Gotham,TextXAlignment=Enum.TextXAlignment.Left},a)end
 local gui=N("ScreenGui",{Name="VyeraHubGUI",ResetOnSpawn=false,ZIndexBehavior=Enum.ZIndexBehavior.Sibling},par)
-local W,H=320,430
-local main=N("Frame",{Size=UDim2.new(0,W,0,H),Position=UDim2.new(.5,-W/2,.5,-H/2),BackgroundColor3=K.bg,BorderSizePixel=0,Active=true,ClipsDescendants=true},gui)
+local W,H=340,470
+local main=N("Frame",{
+	Size=UDim2.new(0,W,0,H),Position=UDim2.new(.5,-W/2,.5,-H/2),BackgroundColor3=K.bg,
+	BorderSizePixel=0,Active=true,ClipsDescendants=true
+},gui)
 rd(main,16)
 N("UIStroke",{Color=K.ac,Thickness=1.5,Transparency=.3},main)
 local hd=N("Frame",{Size=UDim2.new(1,0,0,48),BackgroundColor3=K.ac,BorderSizePixel=0},main)
 rd(hd,16)
 N("UIGradient",{Color=ColorSequence.new(K.ac,K.a2),Rotation=20},hd)
-local lg=N("Frame",{Size=UDim2.new(0,30,0,30),Position=UDim2.new(0,12,.5,-15),BackgroundColor3=Color3.new(1,1,1),BackgroundTransparency=.75,BorderSizePixel=0},hd)
+local lg=N("Frame",{
+	Size=UDim2.new(0,30,0,30),Position=UDim2.new(0,12,.5,-15),
+	BackgroundColor3=Color3.new(1,1,1),BackgroundTransparency=.75,BorderSizePixel=0
+},hd)
 rd(lg,15)
 local lv=L(lg,"V",18,Color3.new(1,1,1),Enum.Font.GothamBold)
 lv.Size=UDim2.new(1,0,1,0)
@@ -249,22 +294,42 @@ lv.TextXAlignment=Enum.TextXAlignment.Center
 local tt=L(hd,"Vyera Hub",16,Color3.new(1,1,1),Enum.Font.GothamBold)
 tt.Size=UDim2.new(1,-140,0,22)
 tt.Position=UDim2.new(0,52,0,6)
-local sub=L(hd,"Steal An Egg  |  v1.2",10,c3(240,230,255))
+local sub=L(hd,"Steal An Egg  |  v1.4  |  by Vyera",10,c3(240,230,255))
 sub.Size=UDim2.new(1,-140,0,14)
 sub.Position=UDim2.new(0,52,0,27)
-local function hb(t,x,c)local b=N("TextButton",{Size=UDim2.new(0,28,0,26),Position=UDim2.new(1,x,.5,-13),BackgroundColor3=c,BackgroundTransparency=.25,Text=t,TextColor3=Color3.new(1,1,1),Font=Enum.Font.GothamBold,TextSize=14,BorderSizePixel=0},hd)rd(b,8)return b end
+local function hb(t,x,c)
+	local b=N("TextButton",{
+		Size=UDim2.new(0,28,0,26),Position=UDim2.new(1,x,.5,-13),
+		BackgroundColor3=c,BackgroundTransparency=.25,Text=t,
+		TextColor3=Color3.new(1,1,1),Font=Enum.Font.GothamBold,TextSize=14,BorderSizePixel=0
+	},hd)
+	rd(b,8)
+	return b
+end
 local mb,xb=hb("-",-68,c3(20,20,32)),hb("X",-36,K.dg)
-local fb=N("TextButton",{Size=UDim2.new(0,44,0,44),Position=UDim2.new(.5,-22,0,8),BackgroundColor3=K.ac,Text="V",TextColor3=Color3.new(1,1,1),Font=Enum.Font.GothamBold,TextSize=20,BorderSizePixel=0},gui)
+local fb=N("TextButton",{
+	Size=UDim2.new(0,44,0,44),Position=UDim2.new(.5,-22,0,8),BackgroundColor3=K.ac,Text="V",
+	TextColor3=Color3.new(1,1,1),Font=Enum.Font.GothamBold,TextSize=20,BorderSizePixel=0
+},gui)
 rd(fb,22)
 N("UIGradient",{Color=ColorSequence.new(K.ac,K.a2),Rotation=45},fb)
 N("UIStroke",{Color=Color3.new(1,1,1),Thickness=1.5,Transparency=.6},fb)
 fb.MouseButton1Click:Connect(function()main.Visible=not main.Visible end)
-local tb=N("Frame",{Size=UDim2.new(1,-24,0,36),Position=UDim2.new(0,12,0,56),BackgroundColor3=K.pn,BorderSizePixel=0},main)
+local tb=N("Frame",{
+	Size=UDim2.new(1,-24,0,36),Position=UDim2.new(0,12,0,56),BackgroundColor3=K.pn,
+	BorderSizePixel=0
+},main)
 rd(tb,10)
-N("UIPadding",{PaddingTop=UDim.new(0,4),PaddingBottom=UDim.new(0,4),PaddingLeft=UDim.new(0,4),PaddingRight=UDim.new(0,4)},tb)
+N("UIPadding",{
+	PaddingTop=UDim.new(0,4),PaddingBottom=UDim.new(0,4),PaddingLeft=UDim.new(0,4),
+	PaddingRight=UDim.new(0,4)
+},tb)
 N("UIListLayout",{FillDirection=Enum.FillDirection.Horizontal,Padding=UDim.new(0,4)},tb)
 local ph=N("Frame",{Size=UDim2.new(1,0,1,-166),Position=UDim2.new(0,0,0,100),BackgroundTransparency=1},main)
-local sb=N("Frame",{Size=UDim2.new(1,-24,0,52),Position=UDim2.new(0,12,1,-60),BackgroundColor3=K.pn,BorderSizePixel=0},main)
+local sb=N("Frame",{
+	Size=UDim2.new(1,-24,0,52),Position=UDim2.new(0,12,1,-60),BackgroundColor3=K.pn,
+	BorderSizePixel=0
+},main)
 rd(sb,10)
 N("UIStroke",{Color=K.p2,Thickness=1,Transparency=.2},sb)
 dot=N("Frame",{Size=UDim2.new(0,8,0,8),Position=UDim2.new(0,12,0,11),BackgroundColor3=GRN,BorderSizePixel=0},sb)
@@ -277,7 +342,10 @@ cL=L(sb,"Egg 0  Skip 0",11,K.gd,Enum.Font.GothamBold)
 cL.Size=UDim2.new(0,110,0,20)
 cL.Position=UDim2.new(1,-120,0,5)
 cL.TextXAlignment=Enum.TextXAlignment.Right
-local tr=N("Frame",{Size=UDim2.new(1,-24,0,6),Position=UDim2.new(0,12,0,34),BackgroundColor3=K.p2,BorderSizePixel=0},sb)
+local tr=N("Frame",{
+	Size=UDim2.new(1,-24,0,6),Position=UDim2.new(0,12,0,34),BackgroundColor3=K.p2,
+	BorderSizePixel=0
+},sb)
 rd(tr,3)
 pb=N("Frame",{Size=UDim2.new(0,0,1,0),BackgroundColor3=K.ac,BorderSizePixel=0},tr)
 rd(pb,3)
@@ -285,58 +353,94 @@ N("UIGradient",{Color=ColorSequence.new(K.ac,K.a2)},pb)
 local pgs,tbs={},{}
 local function sel(n)for k,p in pairs(pgs)do p.Visible=(k==n)tw(tbs[k],{BackgroundColor3=(k==n)and K.ac or K.pn})end end
 local function pg(n)
-local b=N("TextButton",{Size=UDim2.new(.3333,-3,1,0),BackgroundColor3=K.pn,Text=n,TextColor3=K.tx,Font=Enum.Font.GothamMedium,TextSize=13,BorderSizePixel=0,AutoButtonColor=false},tb)
-rd(b,8)
-tbs[n]=b
-local p=N("ScrollingFrame",{Size=UDim2.new(1,0,1,0),BackgroundTransparency=1,BorderSizePixel=0,ScrollBarThickness=3,ScrollBarImageColor3=K.ac,CanvasSize=UDim2.new(0,0,0,0),AutomaticCanvasSize=Enum.AutomaticSize.Y,Visible=false},ph)
-N("UIListLayout",{Padding=UDim.new(0,8),SortOrder=Enum.SortOrder.LayoutOrder},p)
-N("UIPadding",{PaddingTop=UDim.new(0,2),PaddingBottom=UDim.new(0,8),PaddingLeft=UDim.new(0,12),PaddingRight=UDim.new(0,14)},p)
-pgs[n]=p
-b.MouseButton1Click:Connect(function()sel(n)end)
-return p
+	local b=N("TextButton",{
+		Size=UDim2.new(.3333,-3,1,0),BackgroundColor3=K.pn,Text=n,TextColor3=K.tx,
+		Font=Enum.Font.GothamMedium,TextSize=13,BorderSizePixel=0,AutoButtonColor=false
+	},tb)
+	rd(b,8)
+	tbs[n]=b
+	local p=N("ScrollingFrame",{
+		Size=UDim2.new(1,0,1,0),BackgroundTransparency=1,BorderSizePixel=0,
+		ScrollBarThickness=3,ScrollBarImageColor3=K.ac,CanvasSize=UDim2.new(0,0,0,0),
+		AutomaticCanvasSize=Enum.AutomaticSize.Y,Visible=false
+	},ph)
+	N("UIListLayout",{Padding=UDim.new(0,8),SortOrder=Enum.SortOrder.LayoutOrder},p)
+	N("UIPadding",{
+		PaddingTop=UDim.new(0,2),PaddingBottom=UDim.new(0,8),PaddingLeft=UDim.new(0,12),
+		PaddingRight=UDim.new(0,14)
+	},p)
+	pgs[n]=p
+	b.MouseButton1Click:Connect(function()sel(n)end)
+	return p
 end
-local function cd(a,h)local f=N("Frame",{Size=UDim2.new(1,0,0,h),BackgroundColor3=K.pn,BorderSizePixel=0},a)rd(f,10)N("UIStroke",{Color=K.p2,Thickness=1,Transparency=.4},f)return f end
+local function cd(a,h)
+	local f=N("Frame",{Size=UDim2.new(1,0,0,h),BackgroundColor3=K.pn,BorderSizePixel=0},a)
+	rd(f,10)
+	N("UIStroke",{Color=K.p2,Thickness=1,Transparency=.4},f)
+	return f
+end
 local function sc(a,t)
-local r=N("Frame",{Size=UDim2.new(1,0,0,18),BackgroundTransparency=1},a)
-local bar=N("Frame",{Size=UDim2.new(0,3,0,12),Position=UDim2.new(0,0,.5,-6),BackgroundColor3=K.ac,BorderSizePixel=0},r)
-rd(bar,2)
-local l=L(r,string.upper(t),11,K.dm,Enum.Font.GothamBold)
-l.Size=UDim2.new(1,-10,1,0)
-l.Position=UDim2.new(0,10,0,0)
+	local r=N("Frame",{Size=UDim2.new(1,0,0,18),BackgroundTransparency=1},a)
+	local bar=N("Frame",{
+		Size=UDim2.new(0,3,0,12),Position=UDim2.new(0,0,.5,-6),BackgroundColor3=K.ac,
+		BorderSizePixel=0
+	},r)
+	rd(bar,2)
+	local l=L(r,string.upper(t),11,K.dm,Enum.Font.GothamBold)
+	l.Size=UDim2.new(1,-10,1,0)
+	l.Position=UDim2.new(0,10,0,0)
 end
 local function tg(a,t,cb,def)
-local r=cd(a,40)
-local l=L(r,t,13)
-l.Size=UDim2.new(1,-70,1,0)
-l.Position=UDim2.new(0,12,0,0)
-local sw=N("Frame",{Size=UDim2.new(0,44,0,24),Position=UDim2.new(1,-56,.5,-12),BackgroundColor3=K.of,BorderSizePixel=0},r)
-rd(sw,12)
-local kn=N("Frame",{Size=UDim2.new(0,20,0,20),Position=UDim2.new(0,2,.5,-10),BackgroundColor3=Color3.new(1,1,1),BorderSizePixel=0},sw)
-rd(kn,10)
-local ht=N("TextButton",{Size=UDim2.new(1,0,1,0),BackgroundTransparency=1,Text=""},r)
-local on=false
-if def then on=true sw.BackgroundColor3=K.gd kn.Position=UDim2.new(1,-22,.5,-10)end
-ht.MouseButton1Click:Connect(function()
-on=not on
-tw(sw,{BackgroundColor3=on and K.gd or K.of})
-tw(kn,{Position=on and UDim2.new(1,-22,.5,-10)or UDim2.new(0,2,.5,-10)})
-cb(on)
-end)
+	local r=cd(a,40)
+	local l=L(r,t,13)
+	l.Size=UDim2.new(1,-70,1,0)
+	l.Position=UDim2.new(0,12,0,0)
+	local sw=N("Frame",{
+		Size=UDim2.new(0,44,0,24),Position=UDim2.new(1,-56,.5,-12),BackgroundColor3=K.of,
+		BorderSizePixel=0
+	},r)
+	rd(sw,12)
+	local kn=N("Frame",{
+		Size=UDim2.new(0,20,0,20),Position=UDim2.new(0,2,.5,-10),
+		BackgroundColor3=Color3.new(1,1,1),BorderSizePixel=0
+	},sw)
+	rd(kn,10)
+	local ht=N("TextButton",{Size=UDim2.new(1,0,1,0),BackgroundTransparency=1,Text=""},r)
+	local on=false
+	if def then on=true sw.BackgroundColor3=K.gd kn.Position=UDim2.new(1,-22,.5,-10)end
+	ht.MouseButton1Click:Connect(function()
+		on=not on
+		tw(sw,{BackgroundColor3=on and K.gd or K.of})
+		tw(kn,{Position=on and UDim2.new(1,-22,.5,-10)or UDim2.new(0,2,.5,-10)})
+		cb(on)
+	end)
 end
 local function ip(a,t,d,cb,mx)
-local r=cd(a,40)
-local l=L(r,t,13)
-l.Size=UDim2.new(.55,0,1,0)
-l.Position=UDim2.new(0,12,0,0)
-local b=N("TextBox",{Size=UDim2.new(.36,0,0,28),Position=UDim2.new(.62,0,.5,-14),BackgroundColor3=K.p2,Text=tostring(d),TextColor3=K.tx,Font=Enum.Font.GothamMedium,TextSize=13,ClearTextOnFocus=false,BorderSizePixel=0},r)
-rd(b,8)
-b.FocusLost:Connect(function()
-local n=tonumber(b.Text)
-if n then n=math.clamp(n,0,mx or 500)b.Text=tostring(n)cb(n)else b.Text=tostring(d)end
-end)
-return b
+	local r=cd(a,40)
+	local l=L(r,t,13)
+	l.Size=UDim2.new(.55,0,1,0)
+	l.Position=UDim2.new(0,12,0,0)
+	local b=N("TextBox",{
+		Size=UDim2.new(.36,0,0,28),Position=UDim2.new(.62,0,.5,-14),BackgroundColor3=K.p2,
+		Text=tostring(d),TextColor3=K.tx,Font=Enum.Font.GothamMedium,TextSize=13,
+		ClearTextOnFocus=false,BorderSizePixel=0
+	},r)
+	rd(b,8)
+	b.FocusLost:Connect(function()
+		local n=tonumber(b.Text)
+		if n then n=math.clamp(n,0,mx or 500)b.Text=tostring(n)cb(n)else b.Text=tostring(d)end
+	end)
+	return b
 end
-local function bt(a,t,cb,c)local b=N("TextButton",{Size=UDim2.new(1,0,0,38),BackgroundColor3=c or K.ac,Text=t,TextColor3=Color3.new(1,1,1),Font=Enum.Font.GothamMedium,TextSize=13,BorderSizePixel=0},a)rd(b,10)b.MouseButton1Click:Connect(function()cb(b)end)return b end
+local function bt(a,t,cb,c)
+	local b=N("TextButton",{
+		Size=UDim2.new(1,0,0,38),BackgroundColor3=c or K.ac,Text=t,
+		TextColor3=Color3.new(1,1,1),Font=Enum.Font.GothamMedium,TextSize=13,BorderSizePixel=0
+	},a)
+	rd(b,10)
+	b.MouseButton1Click:Connect(function()cb(b)end)
+	return b
+end
 local m=pg("Utama")
 sc(m,"Gerakan")
 tg(m,"Speed",function(v)S.spOn=v local h=hum()if h then if v then S.ow=h.WalkSpeed else h.WalkSpeed=S.ow or 16 end end end)
@@ -350,58 +454,114 @@ tg(m,"Noclip",function(v)S.nc=v end)
 local e=pg("Egg")
 sc(e,"Auto Steal")
 tg(e,"Auto Steal Egg",function(v)
-S.auto=v
-local hh=hum()if v and hh and S.spOn and S.ow then hh.WalkSpeed=S.ow end
-if v then st(fa()and"Mulai (filter rarity aktif)"or"Mulai (semua rarity)",GRN)else stop()st("Dimatikan",AMB)end
+	S.auto=v
+	local hh=hum()if v and hh and S.spOn and S.ow then hh.WalkSpeed=S.ow end
+	if v then st(fa()and"Mulai (filter rarity aktif)"or"Mulai (semua rarity)",GRN)else stop()st("Dimatikan",AMB)end
 end)
 tg(e,"Auto reset kalau nyangkut",function(v)S.rs=v end,true)
+tg(e,"Mode tarik halus (anti nyangkut)",function(v)S.gl=v end,true)
+gsBox=ip(e,"Speed ke egg",S.gs,function(n)S.gs=math.max(n,5)end,400)
+grBox=ip(e,"Speed pulang ke base",S.gr,function(n)S.gr=math.max(n,5)end,400)
+local pr=cd(e,40)
+for i,v in ipairs({{"Pelan",50,70},{"Normal",90,130},{"Cepat",160,220}})do
+	local b=N("TextButton",{
+		Size=UDim2.new(.3333,-8,0,28),Position=UDim2.new((i-1)/3,6,.5,-14),BackgroundColor3=K.p2,
+		Text=v[1].." "..v[2],TextColor3=K.tx,Font=Enum.Font.GothamMedium,TextSize=12,BorderSizePixel=0
+	},pr)
+	rd(b,8)
+	b.MouseButton1Click:Connect(function()
+		S.gs,S.gr=v[2],v[3]
+		gsBox.Text=tostring(v[2])
+		grBox.Text=tostring(v[3])
+		st("Preset "..v[1].." dipakai",GRN)
+	end)
+end
 tg(e,"Teleport (berisiko mati)",function(v)S.tp=v end)
 ip(e,"Jarak maks",S.max,function(n)S.max=n end,10000)
 ip(e,"Speed auto (0=asli)",S.as,function(n)S.as=n end,200)
 sc(e,"Base")
 bt(e,"Set Base di Sini",function(b)local r=root()if r then S.base=r.CFrame b.Text="Base tersimpan (tap untuk update)"st("Base disimpan",GRN)end end,K.a2)
 bt(e,"Jalan ke Base",function()
-if S.base then task.spawn(function()go(S.base.Position,"Jalan ke base")st("Sampai di base",GRN)end)else st("Base belum di-set!",RED)end
+	if S.base then task.spawn(function()go(S.base.Position,"Jalan ke base")st("Sampai di base",GRN)end)else st("Base belum di-set!",RED)end
 end,K.p2)
 bt(e,"Reset Karakter (kalau nyangkut)",function()local h=hum()if h then h.Health=0 end st("Karakter di-reset",AMB)end,K.dg)
 sc(e,"Prioritas rarity (kosong = semua)")
 tg(e,"Ambil rarity lain kalau tidak ada",function(v)S.fb=v end,true)
 local gr=N("Frame",{Size=UDim2.new(1,0,0,0),AutomaticSize=Enum.AutomaticSize.Y,BackgroundTransparency=1},e)
-N("UIGridLayout",{CellSize=UDim2.new(.3333,-5,0,32),CellPadding=UDim2.new(0,6,0,6),SortOrder=Enum.SortOrder.LayoutOrder},gr)
+N("UIGridLayout",{
+	CellSize=UDim2.new(.3333,-5,0,32),CellPadding=UDim2.new(0,6,0,6),
+	SortOrder=Enum.SortOrder.LayoutOrder
+},gr)
 for i,n in ipairs(RAR)do
-local c=N("TextButton",{LayoutOrder=i,BackgroundColor3=K.pn,Text=n,TextColor3=K.tx,Font=Enum.Font.GothamMedium,TextSize=12,BorderSizePixel=0,AutoButtonColor=false},gr)
-rd(c,8)
-N("UIStroke",{Color=K.p2,Thickness=1,Transparency=.3},c)
-c.MouseButton1Click:Connect(function()
-local on=not S.rar[n]
-S.rar[n]=on
-tw(c,{BackgroundColor3=on and K.ac or K.pn})
-end)
+	local c=N("TextButton",{
+		LayoutOrder=i,BackgroundColor3=K.pn,Text=n,TextColor3=K.tx,Font=Enum.Font.GothamMedium,
+		TextSize=12,BorderSizePixel=0,AutoButtonColor=false
+	},gr)
+	rd(c,8)
+	N("UIStroke",{Color=K.p2,Thickness=1,Transparency=.3},c)
+	c.MouseButton1Click:Connect(function()
+		local on=not S.rar[n]
+		S.rar[n]=on
+		tw(c,{BackgroundColor3=on and K.ac or K.pn})
+	end)
 end
 local kc=cd(e,40)
-local kb=N("TextBox",{Size=UDim2.new(1,-16,0,28),Position=UDim2.new(0,8,.5,-14),BackgroundColor3=K.p2,PlaceholderText="kata kunci lain, pisah koma",PlaceholderColor3=K.dm,Text="",TextColor3=K.tx,Font=Enum.Font.Gotham,TextSize=12,ClearTextOnFocus=false,BorderSizePixel=0},kc)
+local kb=N("TextBox",{
+	Size=UDim2.new(1,-16,0,28),Position=UDim2.new(0,8,.5,-14),BackgroundColor3=K.p2,
+	PlaceholderText="kata kunci lain, pisah koma",PlaceholderColor3=K.dm,Text="",
+	TextColor3=K.tx,Font=Enum.Font.Gotham,TextSize=12,ClearTextOnFocus=false,
+	BorderSizePixel=0
+},kc)
 rd(kb,8)
 kb.FocusLost:Connect(function()
-S.kw={}
-for w in string.gmatch(kb.Text,"[^,]+")do
-local x=w:gsub("^%s+",""):gsub("%s+$","")
-if #x>0 then S.kw[#S.kw+1]=x end
-end
+	S.kw={}
+	for w in string.gmatch(kb.Text,"[^,]+")do
+		local x=w:gsub("^%s+",""):gsub("%s+$","")
+		if #x>0 then S.kw[#S.kw+1]=x end
+	end
 end)
 bt(e,"Inspect Egg Terdekat",function()
-local p=near(true,true)
-if not p then st("Tidak ada egg di jangkauan",AMB)return end
-ic[p]=nil
-local out="EGG: "..p:GetFullName().."\n"..info(p)
-print(out)
-pcall(function()setclipboard(out)end)
-st("Info egg disalin ke clipboard",GRN)
+	local p=near(true,true)
+	if not p then st("Tidak ada egg di jangkauan",AMB)return end
+	ic[p]=nil
+	local out="EGG: "..p:GetFullName().."\n"..info(p)
+	print(out)
+	pcall(function()setclipboard(out)end)
+	st("Info egg disalin ke clipboard",GRN)
 end,K.p2)
 local f=pg("Info")
 local icd=cd(f,10)
 icd.AutomaticSize=Enum.AutomaticSize.Y
 icd.Size=UDim2.new(1,0,0,0)
-local it=L(icd,"Vyera Hub v1.2 - Steal An Egg\nTombol bulat V = tampil/sembunyi menu.\n\nCara pakai:\n1. Berdiri di base, tekan 'Set Base di Sini'.\n2. Pilih rarity di tab Egg (kosong = semua).\n3. Nyalakan Auto Steal: karakter JALAN (pakai pathfinding) ke egg lalu balik ke base.\n\nSpeed:\n- Saat Auto Steal, Speed hack DIABAIKAN; karakter pakai speed asli game (atau isi 'Speed auto'). Speed terlalu tinggi bikin muter/nyangkut.\n\nRarity:\n- Rarity pilihan diprioritaskan; kalau tidak ada, egg lain diambil (bisa dimatikan).\n- Status menampilkan rarity terdeteksi, '?' = tidak terdeteksi.\n\nKalau nyangkut:\n- Script otomatis lompat, geser, dan skip egg yang tidak bisa dicapai.\n- 'Auto reset kalau nyangkut' me-respawn karakter setelah 2x gagal.\n- Bar bawah menampilkan sisa jarak ke target.\n\nTips:\n- Teleport bikin karakter gampang mati.\n- Speed tersendat/ketarik = anti-cheat server. Turunkan nilai speed.\n- Saat Auto Steal, matikan Speed dan Noclip.\n- Filter rarity tak cocok? Tekan 'Inspect Egg Terdekat' lalu kirim hasil clipboard.",12,K.dm)
+local it=L(icd,table.concat({
+	"Vyera Hub v1.4 - Steal An Egg",
+	"Tombol bulat V = tampil/sembunyi menu.",
+	"",
+	"Cara pakai:",
+	"1. Berdiri di base, tekan 'Set Base di Sini'.",
+	"2. Pilih rarity di tab Egg (kosong = semua).",
+	"3. Nyalakan Auto Steal: karakter meluncur halus (mode tarik, tembus tembok) ke egg lalu balik ke base. Matikan mode tarik untuk jalan biasa (pathfinding).",
+	"- Kalau dikejar penjaga egg: pakai preset Normal/Cepat. Pulang ke base otomatis lebih cepat dari saat ke egg.",
+	"- Kalau ketarik balik/mati: turunkan speed sedikit demi sedikit.",
+	"",
+	"Speed:",
+	"- Saat Auto Steal, Speed hack DIABAIKAN; karakter pakai speed asli game (atau isi 'Speed auto'). Speed terlalu tinggi bikin muter/nyangkut.",
+	"",
+	"Rarity:",
+	"- Rarity pilihan diprioritaskan; kalau tidak ada, egg lain diambil (bisa dimatikan).",
+	"- Status menampilkan rarity terdeteksi, '?' = tidak terdeteksi.",
+	"",
+	"Kalau nyangkut:",
+	"- Script otomatis lompat, geser, dan skip egg yang tidak bisa dicapai.",
+	"- 'Auto reset kalau nyangkut' me-respawn karakter setelah 2x gagal.",
+	"- Bar bawah menampilkan sisa jarak ke target.",
+	"",
+	"Tips:",
+	"- Teleport bikin karakter gampang mati.",
+	"- Speed tersendat/ketarik = anti-cheat server. Turunkan nilai speed.",
+	"- Saat Auto Steal, matikan Speed dan Noclip.",
+	"- Filter rarity tak cocok? Tekan 'Inspect Egg Terdekat' lalu kirim hasil clipboard.",
+},"\n"),12,K.dm)
 it.Size=UDim2.new(1,-20,0,0)
 it.AutomaticSize=Enum.AutomaticSize.Y
 it.Position=UDim2.new(0,10,0,8)
@@ -410,44 +570,44 @@ it.TextYAlignment=Enum.TextYAlignment.Top
 N("UIPadding",{PaddingBottom=UDim.new(0,10)},icd)
 sel("Utama")
 task.spawn(function()
-while gui.Parent do
-if S.auto then
-local ok3,er=pcall(cyc)
-if not ok3 then st("Error: "..string.sub(tostring(er),1,40),RED)end
-task.wait(1)
-else task.wait(.3)end
-end
+	while gui.Parent do
+		if S.auto then
+			local ok3,er=pcall(cyc)
+			if not ok3 then st("Error: "..string.sub(tostring(er),1,40),RED)end
+			task.wait(1)
+		else task.wait(.3)end
+	end
 end)
 local mn=false
 mb.MouseButton1Click:Connect(function()
-mn=not mn
-tb.Visible=not mn
-ph.Visible=not mn
-sb.Visible=not mn
-T:Create(main,TweenInfo.new(.2),{Size=mn and UDim2.new(0,W,0,48)or UDim2.new(0,W,0,H)}):Play()
-mb.Text=mn and"+"or"-"
+	mn=not mn
+	tb.Visible=not mn
+	ph.Visible=not mn
+	sb.Visible=not mn
+	T:Create(main,TweenInfo.new(.2),{Size=mn and UDim2.new(0,W,0,48)or UDim2.new(0,W,0,H)}):Play()
+	mb.Text=mn and"+"or"-"
 end)
 xb.MouseButton1Click:Connect(function()
-S.auto=false
-stop()
-local h=hum()
-if h then if S.spOn then h.WalkSpeed=S.ow or 16 end if S.jpOn then h.JumpPower=S.oj or 50 end end
-for _,c in ipairs(cn)do c:Disconnect()end
-gui:Destroy()
+	S.auto=false
+	stop()
+	local h=hum()
+	if h then if S.spOn then h.WalkSpeed=S.ow or 16 end if S.jpOn then h.JumpPower=S.oj or 50 end end
+	for _,c in ipairs(cn)do c:Disconnect()end
+	gui:Destroy()
 end)
 local dr,ds,sp0
 hd.InputBegan:Connect(function(i)
-if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then
-dr=true
-ds=i.Position
-sp0=main.Position
-i.Changed:Connect(function()if i.UserInputState==Enum.UserInputState.End then dr=false end end)
-end
+	if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then
+		dr=true
+		ds=i.Position
+		sp0=main.Position
+		i.Changed:Connect(function()if i.UserInputState==Enum.UserInputState.End then dr=false end end)
+	end
 end)
 cn[#cn+1]=U.InputChanged:Connect(function(i)
-if dr and(i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch)then
-local d=i.Position-ds
-main.Position=UDim2.new(sp0.X.Scale,sp0.X.Offset+d.X,sp0.Y.Scale,sp0.Y.Offset+d.Y)
-end
+	if dr and(i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch)then
+		local d=i.Position-ds
+		main.Position=UDim2.new(sp0.X.Scale,sp0.X.Offset+d.X,sp0.Y.Scale,sp0.Y.Offset+d.Y)
+	end
 end)
 print("[Vyera] siap")
